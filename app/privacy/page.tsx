@@ -74,6 +74,10 @@ export default function PrivacyPage() {
           <li>
             To respond if you email us, including privacy or abuse reports.
           </li>
+          <li>
+            To understand how the site is used (page views and similar
+            aggregate traffic) via Google Analytics.
+          </li>
         </ul>
       </section>
 
@@ -83,7 +87,8 @@ export default function PrivacyPage() {
           Your script is sent to a speech provider so it can be spoken, then we
           apply the robot mix. Today that speech step uses Replicate (MiniMax
           TTS). Audio files are stored on Cloudflare R2. Hosting and the
-          database are provided by our infrastructure vendors. Those companies
+          database are provided by our infrastructure vendors. Google Analytics
+          runs in your browser and sends usage data to Google. Those companies
           process data on our instructions to run the product. We do not sell
           your scripts or audio as a dataset.
         </p>
@@ -96,25 +101,26 @@ export default function PrivacyPage() {
       <section id="cookies">
         <h2>Cookies</h2>
         <p>
-          We use first-party cookies only when a feature needs them (for
-          example a guest session id or a login session). They are not required
-          to read these pages. You can block cookies in your browser; the
-          generator may still work, but we may rate-limit by IP hash instead.
+          We use first-party cookies when a feature needs them (for example a
+          guest session id or a login session). Google Analytics also sets
+          first-party cookies (such as <code>_ga</code>) to distinguish
+          browsers for traffic measurement. They are not required to generate
+          audio. You can block cookies in your browser; the generator may still
+          work, but we may rate-limit by IP hash instead.
         </p>
       </section>
 
       <section>
         <h2>Advertising and analytics</h2>
         <p>
-          We do not currently run third-party display ads or Google AdSense on
-          this site. If we later use Google advertising or measurement products,
-          those products may use cookies, web beacons, IP addresses, or similar
-          identifiers to serve and measure ads. Third parties, including Google,
-          may then place or read cookies on your browser or use identifiers
-          because ads or analytics are present.
+          We use Google Analytics 4 (gtag.js, measurement ID G-321RGDQT8J) to
+          measure visits, page views, and similar usage. Google may collect
+          identifiers such as a cookie ID, IP address, browser and device
+          information, and the pages you view. We do not currently run
+          third-party display ads or Google AdSense on this site.
         </p>
         <p>
-          If that happens, Google’s use of data is described in{" "}
+          Google’s use of data is described in{" "}
           <a
             href="https://policies.google.com/technologies/partner-sites"
             rel="noopener noreferrer"
@@ -130,7 +136,7 @@ export default function PrivacyPage() {
           >
             Google Ads Settings
           </a>
-          . We will keep this section aligned with whatever we actually ship.
+          .
         </p>
       </section>
 
