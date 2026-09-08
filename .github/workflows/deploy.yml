@@ -1,0 +1,39 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - master   # 改成你的分支（可能是 master）
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 2201   # 你的SSH端口
+          script: |
+            set -e
+
+            echo "🚀 Start Deploy"
+
+            cd /var/www/robotvoice
+
+            git fetch origin
+            git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+
+            # Full install (not --production): next build needs devDependencies
+            # (typescript, tailwindcss, postcss, autoprefixer, eslint-config-next, …).
+            npm install
+            npm run build
+
+            pm2 reload robotvoice || PORT=3002 pm2 start npm --name "robotvoice" -- run start
+
+            pm2 save
+
+            echo "✅ Deploy Done"
