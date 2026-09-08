@@ -5,6 +5,22 @@ import { randomUUID } from "node:crypto";
 import type { AudioFilterGraph } from "./robot-effects";
 
 const TMP_DIR = path.join(process.cwd(), "tmp");
+const filterSupport = new Map<string, boolean>();
+
+export async function ffmpegHasFilter(name: string): Promise<boolean> {
+  const cached = filterSupport.get(name);
+  if (cached !== undefined) return cached;
+
+  try {
+    const output = await runCommand("ffmpeg", ["-hide_banner", "-filters"]);
+    const available = new RegExp(`\\b${name}\\b`).test(output);
+    filterSupport.set(name, available);
+    return available;
+  } catch {
+    filterSupport.set(name, false);
+    return false;
+  }
+}
 
 function runCommand(bin: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {

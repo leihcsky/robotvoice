@@ -9,7 +9,53 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function buildRobotFilter(preset: RobotPreset): AudioFilterGraph {
+function atempoChain(ratio: number): string[] {
+  const parts: string[] = [];
+  let current = clamp(ratio, 0.25, 4);
+  while (current > 2.0001) {
+    parts.push("atempo=2.0");
+    current /= 2;
+  }
+  while (current < 0.4999) {
+    parts.push("atempo=0.5");
+    current *= 2;
+  }
+  if (Math.abs(current - 1) > 0.001) {
+    parts.push(`atempo=${current.toFixed(4)}`);
+  }
+  return parts;
+}
+
+function pitchTempoFilters(
+  pitchRatio: number,
+  tempoRatio: number,
+  useRubberband: boolean,
+): string[] {
+  if (Math.abs(pitchRatio - 1) <= 0.001 && Math.abs(tempoRatio - 1) <= 0.001) {
+    return [];
+  }
+
+  if (useRubberband) {
+    return [
+      `rubberband=pitch=${pitchRatio.toFixed(4)}:tempo=${tempoRatio.toFixed(4)}`,
+    ];
+  }
+
+  const filters: string[] = [];
+  let atempo = tempoRatio;
+  if (Math.abs(pitchRatio - 1) > 0.001) {
+    const rate = Math.round(44100 * pitchRatio);
+    filters.push("aresample=44100", `asetrate=${rate}`, "aresample=44100");
+    atempo = tempoRatio / pitchRatio;
+  }
+  filters.push(...atempoChain(atempo));
+  return filters;
+}
+
+export function buildRobotFilter(
+  preset: RobotPreset,
+  options: { useRubberband?: boolean } = {},
+): AudioFilterGraph {
   const pitchRatio = clamp(1 + preset.pitch / 100, 0.5, 1.6);
   const tempoRatio = clamp(1 + preset.speed / 100, 0.5, 1.6);
 
@@ -21,7 +67,11 @@ export function buildRobotFilter(preset: RobotPreset): AudioFilterGraph {
 
   if (Math.abs(pitchRatio - 1) > 0.001 || Math.abs(tempoRatio - 1) > 0.001) {
     chain.push(
-      `rubberband=pitch=${pitchRatio.toFixed(4)}:tempo=${tempoRatio.toFixed(4)}`,
+      ...pitchTempoFilters(
+        pitchRatio,
+        tempoRatio,
+        options.useRubberband ?? false,
+      ),
     );
   }
 
