@@ -34,6 +34,7 @@ export async function consumeDailyIpQuota(
     hashIp(ip, options?.secret),
     utcDayKey(options?.now),
     options?.limit ?? getDailyIpLimit(),
+    ip,
   );
 
   if (!result.allowed) {

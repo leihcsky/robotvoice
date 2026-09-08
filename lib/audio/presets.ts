@@ -145,6 +145,10 @@ export const PRESETS: Record<RobotPresetId, RobotPreset> = {
   },
 };
 
+export function isValidPresetId(id: string): id is RobotPresetId {
+  return (PRESET_IDS as readonly string[]).includes(id);
+}
+
 export function getPreset(id: string): RobotPreset {
   const preset = PRESETS[id as RobotPresetId];
   if (!preset) {

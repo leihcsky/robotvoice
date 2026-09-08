@@ -6,7 +6,12 @@ export interface ConsumeResult {
 }
 
 export interface DailyUsageStore {
-  tryConsume(ipHash: string, day: string, limit: number): Promise<ConsumeResult>;
+  tryConsume(
+    ipHash: string,
+    day: string,
+    limit: number,
+    ip?: string,
+  ): Promise<ConsumeResult>;
 }
 
 export function createMemoryDailyUsageStore(
@@ -29,10 +34,12 @@ export function createMemoryDailyUsageStore(
 }
 
 export const prismaDailyUsageStore: DailyUsageStore = {
-  async tryConsume(ipHash, day, limit) {
+  async tryConsume(ipHash, day, limit, ip) {
     const bumped = await prisma.$executeRaw`
       UPDATE daily_ip_usage
-      SET count = count + 1, updated_at = NOW()
+      SET count = count + 1,
+          updated_at = NOW(),
+          ip = COALESCE(ip, ${ip ?? null})
       WHERE ip_hash = ${ipHash} AND day = ${day} AND count < ${limit}
     `;
     if (bumped === 1) {
@@ -40,8 +47,8 @@ export const prismaDailyUsageStore: DailyUsageStore = {
     }
 
     const inserted = await prisma.$executeRaw`
-      INSERT IGNORE INTO daily_ip_usage (ip_hash, day, count, updated_at)
-      VALUES (${ipHash}, ${day}, 1, NOW())
+      INSERT IGNORE INTO daily_ip_usage (ip_hash, day, ip, count, updated_at)
+      VALUES (${ipHash}, ${day}, ${ip ?? null}, 1, NOW())
     `;
     if (inserted === 1) {
       return { allowed: true, count: 1 };
@@ -49,7 +56,9 @@ export const prismaDailyUsageStore: DailyUsageStore = {
 
     const retried = await prisma.$executeRaw`
       UPDATE daily_ip_usage
-      SET count = count + 1, updated_at = NOW()
+      SET count = count + 1,
+          updated_at = NOW(),
+          ip = COALESCE(ip, ${ip ?? null})
       WHERE ip_hash = ${ipHash} AND day = ${day} AND count < ${limit}
     `;
     if (retried === 1) {

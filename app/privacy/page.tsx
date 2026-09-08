@@ -42,8 +42,9 @@ export default function PrivacyPage() {
           <li>
             <strong className="text-foreground">Technical data for limits.</strong>{" "}
             To stop unbounded TTS use we read your IP address from the request,
-            hash it, and count generations per UTC day. We store the hash and
-            the count, not the raw IP, in a daily usage table.
+            hash it for the daily quota key, and store the IP, the hash, and the
+            count for that UTC day. We use this to enforce the free allowance
+            and to review abuse.
           </li>
           <li>
             <strong className="text-foreground">Cookies.</strong> If guest or

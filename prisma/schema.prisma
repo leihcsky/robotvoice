@@ -125,10 +125,11 @@ model Generation {
 }
 
 /// UTC day bucket for validation-period cost control.
-/// Stores a keyed hash of the client IP, never the raw address.
+/// Quota key is ip_hash; ip is stored for ops (abuse review).
 model DailyIpUsage {
   ipHash    String   @map("ip_hash") @db.VarChar(64)
   day       String   @db.Char(10)
+  ip        String?  @db.VarChar(45)
   count     Int      @default(0)
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -112,6 +112,8 @@ export function AudioPlayer({
         <a
           href={src}
           download={downloadName}
+          target="_blank"
+          rel="noopener noreferrer"
           title="Download MP3"
           aria-label="Download MP3"
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line text-foreground transition hover:border-accent hover:bg-accent/10 hover:text-accent"
