@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  CREATOR
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  INCOMPLETE
+  EXPIRED
+}
+
+enum CreditTransactionType {
+  SUBSCRIPTION_GRANT
+  GENERATION
+  GENERATION_RESERVE
+  GENERATION_REFUND
+  CREDIT_PURCHASE
+  MONTHLY_RESET
+}
+
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  subscriptions      Subscription[]
+  creditBalance      CreditBalance?
+  creditTransactions CreditTransaction[]
+  generations        Generation[]
+
+  @@map("users")
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  userId                 String             @map("user_id")
+  provider               String
+  providerSubscriptionId String             @map("provider_subscription_id")
+  plan                   Plan
+  status                 SubscriptionStatus
+  currentPeriodStart     DateTime           @map("current_period_start")
+  currentPeriodEnd       DateTime           @map("current_period_end")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model CreditBalance {
+  userId  String @id @map("user_id")
+  balance Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_balances")
+}
+
+model CreditTransaction {
+  id          String                @id @default(cuid())
+  userId      String                @map("user_id")
+  amount      Int
+  type        CreditTransactionType
+  referenceId String?               @map("reference_id")
+  description String?               @db.VarChar(500)
+  createdAt   DateTime              @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([referenceId])
+  @@map("credit_transactions")
+}
+
+model Generation {
+  id                 String           @id @default(cuid())
+  userId             String?          @map("user_id")
+  guestSessionId     String?          @map("guest_session_id")
+  text               String           @db.Text
+  textLength         Int              @map("text_length")
+  voiceId            String           @map("voice_id")
+  preset             String
+  status             GenerationStatus @default(PENDING)
+  inputStorageKey    String?          @map("input_storage_key")
+  outputStorageKey   String?          @map("output_storage_key")
+  duration           Float?
+  format             String           @default("mp3")
+  creditsUsed        Int              @default(0) @map("credits_used")
+  provider           String           @default("replicate")
+  providerRequestId  String?          @map("provider_request_id")
+  providerCharacters Int?             @map("provider_characters")
+  providerCost       Decimal?         @map("provider_cost") @db.Decimal(12, 6)
+  processingTimeMs   Int?             @map("processing_time_ms")
+  errorMessage       String?          @map("error_message") @db.VarChar(1000)
+  createdAt          DateTime         @default(now()) @map("created_at")
+  completedAt        DateTime?        @map("completed_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([guestSessionId])
+  @@index([status])
+  @@map("generations")
+}
+
+/// UTC day bucket for validation-period cost control.
+/// Stores a keyed hash of the client IP, never the raw address.
+model DailyIpUsage {
+  ipHash    String   @map("ip_hash") @db.VarChar(64)
+  day       String   @db.Char(10)
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@id([ipHash, day])
+  @@map("daily_ip_usage")
+}
